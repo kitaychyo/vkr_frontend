@@ -16,10 +16,18 @@ async function fetchHistory() {
   error.value = null
   try {
     const res = await axios.get(`${API_BASE}/matches-history`)
-    matches.value = Array.isArray(res.data) ? res.data : []
+    console.log('API Response:', res.data)
+    
+    let data = res.data
+    if (data && data.data) {
+      data = data.data
+    }
+    
+    matches.value = Array.isArray(data) ? data : []
+    console.log('Processed matches:', matches.value)
   } catch (e) {
     error.value = 'Ошибка при загрузке истории'
-    console.error(e)
+    console.error('Fetch error:', e)
   } finally {
     loading.value = false
   }
@@ -31,18 +39,19 @@ const filteredMatches = computed(() => {
   // Search filter
   if (searchTerm.value) {
     const term = searchTerm.value.toLowerCase()
-    result = result.filter(m =>
-      m.RadiantTeamName.toLowerCase().includes(term) ||
-      m.DireTeamName.toLowerCase().includes(term) ||
-      String(m.match_id).includes(term)
-    )
+    result = result.filter(m => {
+      const radiantName = (m.RadiantTeamName || '').toLowerCase()
+      const direName = (m.DireTeamName || '').toLowerCase()
+      const matchId = String(m.match_id || '')
+      return radiantName.includes(term) || direName.includes(term) || matchId.includes(term)
+    })
   }
 
   // Sort
   if (sortBy.value === 'newest') {
-    result.sort((a, b) => Number(b.match_id) - Number(a.match_id))
+    result.sort((a, b) => Number(b.match_id || 0) - Number(a.match_id || 0))
   } else if (sortBy.value === 'oldest') {
-    result.sort((a, b) => Number(a.match_id) - Number(b.match_id))
+    result.sort((a, b) => Number(a.match_id || 0) - Number(b.match_id || 0))
   } else if (sortBy.value === 'duration_asc') {
     result.sort((a, b) => (a.duration || 0) - (b.duration || 0))
   } else if (sortBy.value === 'duration_desc') {
