@@ -9,7 +9,7 @@ const loading = ref(false)
 const error = ref(null)
 const searchTerm = ref('')
 const sortBy = ref('newest')
-const API_BASE = 'http://127.0.0.1:8000/api'
+const API_BASE = import.meta.env.VITE_API_BASE
 
 async function fetchHistory() {
   loading.value = true
